@@ -1,7 +1,7 @@
 package monitor
 
 import java.io._
-import java.net.{HttpURLConnection, ServerSocket, SocketTimeoutException, URL}
+import java.net._
 
 import akka.actor.Props
 import monitor.models.{Forecast, Temperature}
@@ -35,10 +35,14 @@ object WeatherWatcher extends App with Constants {
   }
 
   def fetchAndAnalyzeForecasts(forecasts: Seq[Forecast]): Seq[Forecast] = {
+    println()
+    println("Retrieving weather forecast for selected cities...")
     forecasts.map { forecast =>
-      //          val forecastData = get(s"http://api.openweathermap.org/data/2.5/forecast?q=$location&mode=json&appid=$apiKey")
-      val is = ClassLoader.getSystemClassLoader.getResourceAsStream("sample-forecast.json")
-      val forecastData = Json.parse(scala.io.Source.fromInputStream(is).mkString)
+      val forecastData = Json.parse(
+        get(s"http://api.openweathermap.org/data/2.5/forecast?q=${forecast.location}&mode=json&appid=$apiKey")
+      )
+//      val is = ClassLoader.getSystemClassLoader.getResourceAsStream("sample-forecast.json")
+//      val forecastData = Json.parse(scala.io.Source.fromInputStream(is).mkString)
 
       val temperatureList = (forecastData \\ "list").map {
         case JsArray(values) => values map { value =>
@@ -55,7 +59,7 @@ object WeatherWatcher extends App with Constants {
       val _temps = temperatureList.groupBy(_.dateString).map {
         // get the lowest of the temperature readings for each day.
         case (_, temps) => temps.minBy(_.asCelsius)
-      }.toSeq.sortBy(_.dateString)
+      }.toSeq.sortBy(_.dateString).takeRight(5)
 
       // check if we have a critical weather alert for this forecast.
       val critical = _temps.map(_.asCelsius)
@@ -126,11 +130,12 @@ object WeatherWatcher extends App with Constants {
 
   def spinUpWebServer(): Unit = {
     val port = config.get("port").toInt
-    val serverSocket = new ServerSocket(port)
+    val serverSocket = new ServerSocket(port, 0, InetAddress.getByName("localhost"))
 
     val actorSystem = akka.actor.ActorSystem.apply("weather-server-actor-system")
     println(s"Web Server is listening at port $port")
-    println("Visit this address on your browser - http://127.0.0.1:9000")
+    val serverAddress = serverSocket.getInetAddress.getHostAddress
+    println(s"Visit this address on your browser - http://$serverAddress:$port")
 
     val task = actorSystem.scheduler.scheduleOnce(0.millis,
       actorSystem.actorOf(Props[StaticWebServer]),
