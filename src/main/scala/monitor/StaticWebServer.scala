@@ -1,6 +1,6 @@
 package monitor
 
-import java.io.{BufferedInputStream, InputStreamReader, OutputStreamWriter, PrintWriter}
+import java.io.{OutputStreamWriter, PrintWriter}
 import java.net.{ServerSocket, Socket}
 
 import akka.actor.{Actor, ActorSystem, Props}
@@ -36,7 +36,9 @@ object RequestHandler extends Actor with Headers {
   }
 
   def handleRequest(socket: Socket): Unit = {
-    val reader = scala.io.Source.fromInputStream(socket.getInputStream).bufferedReader()
+    val reader = scala.io.Source
+      .fromInputStream(socket.getInputStream)
+      .bufferedReader()
 
     if (reader.readLine().contains("GET / ")) {
       implicit val writer: PrintWriter =
@@ -45,21 +47,10 @@ object RequestHandler extends Actor with Headers {
       try {
         val forecasts = ForecastLogReader.read()
 
-        // add all the monitored temperatures.
-        val _templatizerOpt = forecasts.headOption.map { forecast =>
-          forecast.monitoredTemperatures.foldRight(templatizer)(
-            (temp, _templatizer) => _templatizer.addWatchedTemperature(temp)
-          )
-        }
-
-        // add all the forecasted temperatures.
-        val template = _templatizerOpt match {
-          case Some(_templatizer) =>
-            forecasts.foldRight(_templatizer)(
-              (forecast, __templatizer) => __templatizer.addForecast(forecast)
-            )
-          case _ => templatizer
-        }
+        // add all forecasted and monitored temperatures.
+        val template = forecasts.foldRight(templatizer)(
+          (forecast, _templatizer) => _templatizer.addForecast(forecast)
+        )
 
         // render the templatizer's HTML template after interpolating its data.
         val htmlBody = template.render()

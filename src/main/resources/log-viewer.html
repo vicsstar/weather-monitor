@@ -32,13 +32,16 @@
             background-color: #fff;
             width: 860px;
             height: 500px;
+            display: flex;
+            flex-direction: column;
         }
         header {
             display: flex;
             flex-direction: row;
             justify-content: space-between;
-            padding-bottom: 15px;
+            padding-bottom: 20px;
             border-bottom: 1px solid #E4E4E4;
+            margin-bottom: 15px;
         }
         header h2 {
             align-self: center;
@@ -46,31 +49,8 @@
             color: #757575;
             font-weight: lighter;
         }
-        header .monitored-temps {
-            align-self: center;
-            font-size: 11px;
-            font-weight: bold;
-            color: #9c9c9c;
-            display: flex;
-            flex-direction: column;
-        }
-        header .monitored-temps .temps {
-            align-self: flex-end;
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-end;
-        }
-        header .monitored-temps label {
-            align-self: flex-end;
-        }
-        header .monitored-temps .temps .temp {
-            font-size: 24px;
-            font-weight: 100;
-            margin-left: 15px;
-        }
         #forecasts {
             overflow-y: scroll;
-            padding: 25px 0;
         }
         #forecasts .forecast {
             display: flex;
@@ -80,6 +60,9 @@
             height: 100px;
             border: 1px solid #E4E4E4;
             margin-bottom: 20px;
+        }
+        #forecasts .forecast:last-child {
+            margin-bottom: 0;
         }
         #forecasts .forecast.normal {
             border-color: #5A9463;
@@ -111,25 +94,65 @@
         #forecasts .forecast .body {
             align-self: center;
             display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        #forecasts .forecast .body > .temps {
+            flex: 1;
+            display: flex;
             flex-direction: row;
             justify-content: space-around;
+            margin: 0 15px;
         }
-        #forecasts .forecast .body .temp {
+        #forecasts .forecast .body > .temps .temp {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             margin: 0 15px;
         }
-        #forecasts .forecast .body .temp > span {
-            font-size: 24px;
+        #forecasts .forecast .body > .temps .temp > span {
+            font-size: 26px;
             font-weight: 100;
             color: #9C9C9C;
         }
-        #forecasts .forecast .body .temp > label {
+        #forecasts .forecast .body > .temps .temp > label {
             font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
             color: #757575;
+        }
+        #forecasts .forecast .body .monitored-temps {
+            align-self: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            padding: 2px;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        #forecasts .forecast .body .monitored-temps .temp:first-child {
+            margin-left: 0;
+        }
+        #forecasts .forecast .body .monitored-temps .temp {
+            font-size: 14px;
+            font-weight: 100;
+            margin-left: 15px;
+        }
+        #forecasts .forecast .body .monitored-temps .temp sup {
+            font-size: 12px;
+        }
+        #forecasts .forecast.normal .body .monitored-temps {
+            background-color: #70B97C;
+        }
+        #forecasts .forecast.critical .body .monitored-temps {
+            background-color: #BC5852;
         }
     </style>
 </head>
@@ -138,26 +161,32 @@
     <section id="main">
         <header>
             <h2>Weather Alert Dashboard</h2>
-            <div class="monitored-temps">
-                <div class="temps">
-                    @monitoredTemps
-                    <!--<span class="temp">0<sup>o</sup>c</span>-->
-                </div>
-                <label>TEMPERATURES MONITORED</label>
-            </div>
         </header>
         <div id="forecasts">
             @forecasts
-            <!--<div class="forecast normal">-->
-                <!--<span class="city">TURKU</span>-->
-                <!--<div class="body">-->
-                    <!--<div class="temp">-->
-                        <!--<span>-12<sup>o</sup>c</span>-->
-                        <!--<label>DAY 1</label>-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<span class="status">NORMAL</span>-->
-            <!--</div>-->
+            <!-- <div class="forecast critical">
+                <span class="city">TURKU</span>
+                <div class="body">
+                    <div class="temps">
+                        <div class="temp">
+                            <span>-12<sup>o</sup>c</span>
+                            <label>DAY 1</label>
+                        </div>
+                        <div class="temp">
+                            <span>-12<sup>o</sup>c</span>
+                            <label>DAY 1</label>
+                        </div>
+                        <div class="temp">
+                            <span>-12<sup>o</sup>c</span>
+                            <label>DAY 1</label>
+                        </div>
+                    </div>
+                    <div class="monitored-temps">
+                        <span class="temp">0<sup>o</sup>c</span>
+                    </div>
+                </div>
+                <span class="status">NORMAL</span>
+            </div> -->
         </div>
     </section>
 </section>

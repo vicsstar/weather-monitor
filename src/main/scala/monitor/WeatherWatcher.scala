@@ -9,27 +9,28 @@ import play.api.libs.json.{JsArray, Json}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.ExecutionContext.Implicits.global
-import utils.Config
+import utils.{Config, Constants}
 
-object WeatherWatcher extends App {
+object WeatherWatcher extends App with Constants {
   type Status = String
 
   val config = new Config("config.properties")
   val apiKey = config.get("api_key")
+  val periodicCheckTime = config.get("periodic_check_time").toInt
 
-  def readForecasts(): Seq[Forecast] = {
+  lazy val readForecasts: Seq[Forecast] = {
     val stdin = scala.io.StdIn
 
     val locations = stdin.
       readLine("Enter list of locations, separated by commas: ").
       split(",").
-      map(loc => Forecast(loc))
+      map(loc => Forecast(loc.trim))
 
     locations.map { forecast =>
       val temperatureStrings = stdin.readLine(
         s"For ${forecast.location}, enter temperature limits to listen for, separated by commas (IN CELSIUS): ")
 
-      val temperatures = temperatureStrings.split(",").map(temp => temp.trim().toDouble)
+      val temperatures = temperatureStrings.split(",").map(temp => temp.trim.toDouble)
 
       forecast.copy(monitoredTemperatures = temperatures)
     }
@@ -60,7 +61,7 @@ object WeatherWatcher extends App {
 
       // check if we have a critical weather alert.
       val critical = _temps.map(_.asCelsius).exists(
-        t1 => forecast.monitoredTemperatures.exists(t2 => t2 <= t1))
+        t1 => forecast.monitoredTemperatures.exists(t2 => t1 <= t2))
 
       forecast.copy(
         temperatures = _temps,
@@ -71,7 +72,7 @@ object WeatherWatcher extends App {
 
   def saveToLogFile(forecasts: Seq[Forecast]): Unit = {
     val userHome: String = sys.env("HOME")
-    val logFile = new File(userHome, Forecast.LOG_FILENAME)
+    val logFile = new File(userHome, LOG_FILENAME)
     val logWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(logFile)))
 
     try {
@@ -96,7 +97,7 @@ object WeatherWatcher extends App {
     try {
       saveToLogFile(
         fetchAndAnalyzeForecasts(
-          readForecasts()
+          readForecasts
         )
       )
     } catch {
@@ -129,17 +130,31 @@ object WeatherWatcher extends App {
     val serverSocket = new ServerSocket(port)
 
     val actorSystem = akka.actor.ActorSystem.apply("weather-server-actor-system")
+    println(s"Web Server is listening at port $port")
+
+    val task = actorSystem.scheduler.scheduleOnce(0.millis,
+      actorSystem.actorOf(Props[StaticWebServer]),
+      WaitForConnection(serverSocket, actorSystem))
+
     actorSystem.registerOnTermination(() => {
+      task.cancel()
       serverSocket.close()
       actorSystem.terminate()
       println("Web server terminated.")
     })
-    println(s"Web Server is listening at port $port")
-    actorSystem.scheduler.scheduleOnce(0.millis,
-      actorSystem.actorOf(Props[StaticWebServer]),
-      WaitForConnection(serverSocket, actorSystem))
   }
 
-  begin()
-  spinUpWebServer()
+  def schedulePeriodicChecker(): Unit = {
+    // run every 30 minutes.
+    actorSystem.scheduler.schedule(0.millis, 1.minutes, () => {
+      begin()
+    })
+  }
+
+  val actorSystem = akka.actor.ActorSystem.apply("main-scheduler")
+
+  actorSystem.scheduler.scheduleOnce(0.millis, () => {
+    spinUpWebServer()
+    schedulePeriodicChecker()
+  })
 }

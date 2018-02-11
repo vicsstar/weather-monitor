@@ -8,5 +8,6 @@ scalaVersion := "2.12.4"
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.6.8",
   "com.typesafe.akka" %% "akka-actor" % "2.5.9",
-  "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
+  "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
+  "org.specs2" %% "specs2-core" % "4.0.2" % Test
 )
