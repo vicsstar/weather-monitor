@@ -1,4 +1,4 @@
-## This is a Scala console application that monitors for extreme weather conditions based on data read from the command line.
+## This is a Scala SBT console application that monitors for extreme weather conditions based on parameters read from the command line.
 
 The default implementation utilizes the openweathermap.org API for forecasting. Documentation here: https://openweathermap.org/api
 
@@ -20,3 +20,8 @@ You can also run the application by opening it as an SBT project in IntelliJ IDE
 
 Once the app is running, the web server can be accessed at this address: http://127.0.0.1:9000
 This shows the weather forecast data and limits in a visual (HTML) interface.
+
+### Configuration
+
+The configuration file resides in the classpath with the name `config.properties`.
+It contains the `port` key for specifying the port to which the web server should bind and `api_key` for the weather forecast service.
