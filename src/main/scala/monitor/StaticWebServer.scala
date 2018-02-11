@@ -28,8 +28,6 @@ class StaticWebServer extends Actor {
 }
 
 object RequestHandler extends Actor with Headers {
-  val templatizer = ForecastTemplatizer()
-
   override def receive: Receive = {
     case HandleConnection(socket: Socket) => handleRequest(socket)
     case _ =>
@@ -47,6 +45,7 @@ object RequestHandler extends Actor with Headers {
       try {
         val forecasts = ForecastLogReader.read()
 
+        val templatizer = ForecastTemplatizer()
         // add all forecasted and monitored temperatures.
         val template = forecasts.foldRight(templatizer)(
           (forecast, _templatizer) => _templatizer.addForecast(forecast)

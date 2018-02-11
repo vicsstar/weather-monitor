@@ -14,16 +14,18 @@ object ForecastLogReader extends Constants {
 
     temperatureLog.split("\n").map { forecastString =>
       forecastString.split('|').toList match {
-        case location :: temps :: monitoredTemps :: alertStatus :: Nil =>
+        case location :: temps :: monitoredTemp :: alertStatus :: Nil =>
           Forecast(
             location,
             temps.split(",").map { temp =>
               val t = temp.split(" ")
               new Temperature(t(0).toDouble + 273.15, t(1))
             },
-            monitoredTemps.split(",").map(_.toDouble),
+            monitoredTemp.toDouble,
             Some(alertStatus)
           )
+        case _ =>
+          Forecast("No locations.")
       }
     }
   }

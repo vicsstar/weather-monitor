@@ -1,19 +1,20 @@
 package monitor
 
-import java.net.URL
-
+import java.io.InputStream
 import monitor.models.Forecast
 
 import scala.xml.Elem
 
 case class ForecastTemplatizer(forecasts: Seq[Elem] = Nil) {
-  lazy val htmlFile: URL = ClassLoader.
-    getSystemClassLoader.getResource("log-viewer.html")
+  val htmlInputStream: InputStream = ClassLoader.
+    getSystemClassLoader.getResourceAsStream("log-viewer.html")
 
   def addForecast(forecast: Forecast): ForecastTemplatizer = {
-    val monitoredTemps = forecast.monitoredTemperatures.map { temp =>
-      <span class="temp">{temp.formatted("%.1f")}<sup>o</sup>c</span>
-    }
+    val monitoredTemp =
+      <span class="temp">
+        {forecast.monitoredTemperature.formatted("%.1f")}
+        <sup>o</sup>c <strong><small>LIMIT</small></strong>
+      </span>
 
     val forecastedTemps = forecast.temperatures.map { temp =>
       <div class="temp">
@@ -30,7 +31,7 @@ case class ForecastTemplatizer(forecasts: Seq[Elem] = Nil) {
             {forecastedTemps}
           </div>
           <div class="monitored-temps">
-            {monitoredTemps}
+            {monitoredTemp}
           </div>
         </div>
         <span class="status">{forecast.status.get.toUpperCase}</span>
@@ -40,20 +41,20 @@ case class ForecastTemplatizer(forecasts: Seq[Elem] = Nil) {
   }
 
   def render(): String = {
-    val inputStream = htmlFile.openStream()
-
     try {
-      val htmlContent = scala.io.Source.fromInputStream(inputStream).mkString
+      val htmlContent = scala.io.Source.fromInputStream(htmlInputStream).mkString
 
       htmlContent.replaceFirst(
         "@forecasts",
         forecasts.map(_.toString).mkString
       )
     } catch {
-      case _: Exception => ""
+      case e: Exception =>
+        e.printStackTrace()
+        ""
     } finally {
-      if (inputStream != null) {
-        inputStream.close()
+      if (htmlInputStream != null) {
+        htmlInputStream.close()
       }
     }
   }

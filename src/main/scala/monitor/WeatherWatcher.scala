@@ -27,19 +27,17 @@ object WeatherWatcher extends App with Constants {
       map(loc => Forecast(loc.trim))
 
     locations.map { forecast =>
-      val temperatureStrings = stdin.readLine(
-        s"For ${forecast.location}, enter temperature limits to listen for, separated by commas (IN CELSIUS): ")
+      val temperatureString = stdin.readLine(
+        s"For ${forecast.location}, enter the temperature limit to listen for (IN CELSIUS): ")
 
-      val temperatures = temperatureStrings.split(",").map(temp => temp.trim.toDouble)
-
-      forecast.copy(monitoredTemperatures = temperatures)
+      forecast.copy(monitoredTemperature = temperatureString.trim.toDouble)
     }
   }
 
   def fetchAndAnalyzeForecasts(forecasts: Seq[Forecast]): Seq[Forecast] = {
     forecasts.map { forecast =>
       //          val forecastData = get(s"http://api.openweathermap.org/data/2.5/forecast?q=$location&mode=json&appid=$apiKey")
-      val is = ClassLoader.getSystemClassLoader.getResourceAsStream("forecast.json")
+      val is = ClassLoader.getSystemClassLoader.getResourceAsStream("sample-forecast.json")
       val forecastData = Json.parse(scala.io.Source.fromInputStream(is).mkString)
 
       val temperatureList = (forecastData \\ "list").map {
@@ -59,13 +57,13 @@ object WeatherWatcher extends App with Constants {
         case (_, temps) => temps.minBy(_.asCelsius)
       }.toSeq.sortBy(_.dateString)
 
-      // check if we have a critical weather alert.
-      val critical = _temps.map(_.asCelsius).exists(
-        t1 => forecast.monitoredTemperatures.exists(t2 => t1 <= t2))
+      // check if we have a critical weather alert for this forecast.
+      val critical = _temps.map(_.asCelsius)
+        .exists(t1 => t1 <= forecast.monitoredTemperature)
 
       forecast.copy(
         temperatures = _temps,
-        status = Some(if(critical) "Critical" else "Normal")
+        status = Some(if(critical) "critical" else "normal")
       )
     }
   }
@@ -77,10 +75,11 @@ object WeatherWatcher extends App with Constants {
 
     try {
       forecasts.foreach {
-        case Forecast(location, temperatures, monitoredTemperatures, alertStatus) =>
-          logWriter.println(s"$location|" +
+        case Forecast(location, temperatures, monitoredTemperature, alertStatus) =>
+          logWriter.println(
+            s"$location|" +
             s"${temperatures.map(t => s"${t.asCelsius.formatted("%.1f")} ${t.dateString}").mkString(",")}|" +
-            s"${monitoredTemperatures.mkString(",")}|" +
+            s"$monitoredTemperature|" +
             s"${alertStatus.get}")
       }
     } finally {
@@ -131,6 +130,7 @@ object WeatherWatcher extends App with Constants {
 
     val actorSystem = akka.actor.ActorSystem.apply("weather-server-actor-system")
     println(s"Web Server is listening at port $port")
+    println("Visit this address on your browser - http://127.0.0.1:9000")
 
     val task = actorSystem.scheduler.scheduleOnce(0.millis,
       actorSystem.actorOf(Props[StaticWebServer]),
@@ -146,7 +146,7 @@ object WeatherWatcher extends App with Constants {
 
   def schedulePeriodicChecker(): Unit = {
     // run every 30 minutes.
-    actorSystem.scheduler.schedule(0.millis, 1.minutes, () => {
+    actorSystem.scheduler.schedule(0.millis, periodicCheckTime.minutes, () => {
       begin()
     })
   }
