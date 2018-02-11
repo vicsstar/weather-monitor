@@ -21,6 +21,10 @@ You can also run the application by opening it as an SBT project in IntelliJ IDE
 Once the app is running, the web server can be accessed at this address: http://127.0.0.1:9000
 This shows the weather forecast data and limits in a visual (HTML) interface.
 
+### Example UI - Screenshot
+
+![Example UI Screenshot](https://raw.githubusercontent.com/vicsstar/weather-monitor/master/screenshot.png)
+
 ### Configuration
 
 The configuration file resides in the classpath with the name `config.properties`.
