@@ -11,3 +11,5 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
   "org.specs2" %% "specs2-core" % "4.0.2" % Test
 )
+
+resourceDirectory in Runtime := baseDirectory.value / "resources"

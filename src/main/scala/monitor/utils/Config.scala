@@ -4,7 +4,7 @@ import java.util.Properties
 
 class Config(resourceFile: String) {
   val properties = new Properties()
-  properties.load(ClassLoader.getSystemResourceAsStream(resourceFile))
+  properties.load(getClass.getResourceAsStream(resourceFile))
 
   def get(key: String): String = properties.getProperty(key)
 }

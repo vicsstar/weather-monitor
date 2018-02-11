@@ -6,8 +6,7 @@ import monitor.models.Forecast
 import scala.xml.Elem
 
 case class ForecastTemplatizer(forecasts: Seq[Elem] = Nil) {
-  val htmlInputStream: InputStream = ClassLoader.
-    getSystemClassLoader.getResourceAsStream("log-viewer.html")
+  val htmlInputStream: InputStream = getClass.getResourceAsStream("/log-viewer.html")
 
   def addForecast(forecast: Forecast): ForecastTemplatizer = {
     val monitoredTemp =

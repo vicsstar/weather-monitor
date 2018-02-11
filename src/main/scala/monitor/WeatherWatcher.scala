@@ -14,7 +14,7 @@ import utils.{Config, Constants}
 object WeatherWatcher extends App with Constants {
   type Status = String
 
-  val config = new Config("config.properties")
+  val config = new Config("/config.properties")
   val apiKey = config.get("api_key")
   val periodicCheckTime = config.get("periodic_check_time").toInt
 
@@ -132,7 +132,6 @@ object WeatherWatcher extends App with Constants {
     val port = config.get("port").toInt
     val serverSocket = new ServerSocket(port, 0, InetAddress.getByName("localhost"))
 
-    val actorSystem = akka.actor.ActorSystem.apply("weather-server-actor-system")
     println(s"Web Server is listening at port $port")
     val serverAddress = serverSocket.getInetAddress.getHostAddress
     println(s"Visit this address on your browser - http://$serverAddress:$port")
@@ -156,7 +155,7 @@ object WeatherWatcher extends App with Constants {
     })
   }
 
-  val actorSystem = akka.actor.ActorSystem.apply("main-scheduler")
+  val actorSystem = akka.actor.ActorSystem.apply("main-system")
 
   actorSystem.scheduler.scheduleOnce(0.millis, () => {
     spinUpWebServer()

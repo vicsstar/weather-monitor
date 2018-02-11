@@ -7,6 +7,8 @@ The default implementation utilizes the openweathermap.org API for forecasting. 
 Run the application with this command: `sbt run`
 Run tests using the command: `sbt test`
 
+You can also run the application by opening it as an SBT project in IntelliJ IDEA.
+
 ### Here are the steps the application takes in achieving weather forecast monitoring:
 
 - Pulls temperature data from the weather API for 5-day forecasts.
